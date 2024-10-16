@@ -22,8 +22,8 @@ This repository contains open-source code you can use to build the Alarm App for
 - [How to build for Android?](./android/README.md)
 - [How to build and deploy the microservices?](./microservices/README.md) 
 
-The latest release can be found [here](https://github.com/SoftwareAG/cumulocity-alarmapp/releases/latest). 
-![Workflow](https://github.com/SoftwareAG/cumulocity-alarmapp/actions/workflows/build.yml/badge.svg)
+The latest release can be found [here](https://github.com/Cumulocity-IoT/cumulocity-alarmapp/releases/latest). 
+![Workflow](https://github.com/Cumulocity-IoT/cumulocity-alarmapp/actions/workflows/build.yml/badge.svg)
 
 The release contains binaries for Android and iOS:
 
@@ -38,7 +38,7 @@ You can install the application on Android by downloading the `APK` file from th
 
 **Downloading the APK**
 
-- Visit the releases section of this GitHub repository and open the latest [release](https://github.com/SoftwareAG/cumulocity-alarmapp/releases/latest),
+- Visit the releases section of this GitHub repository and open the latest [release](https://github.com/Cumulocity-IoT/cumulocity-alarmapp/releases/latest),
 - Download the `APK` file.
 
 **Installing the App**

@@ -3,7 +3,7 @@
     {
       "identity" : "cumulocity-clients-swift",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/SoftwareAG/cumulocity-clients-swift",
+      "location" : "https://github.com/Cumulocity-IoT/cumulocity-clients-swift",
       "state" : {
         "branch" : "main",
         "revision" : "fd6203c62a8f7ca6b04fdde22f8c472359e1c3ae"

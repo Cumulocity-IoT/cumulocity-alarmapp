@@ -50,7 +50,7 @@ A deep link consists of a URI that link to a location within the App. The URL ty
 
 The `Build release candidate` GitHub workflow creates an unsigned `IPA` as well as an Xcode Archive. The `IPA` file can be uploaded to the App Store or deployed to devices using a Mobile-Device-Management (MDM) solution.
 
-The latest release can be found [here](https://github.com/SoftwareAG/cumulocity-alarmapp/releases/latest).
+The latest release can be found [here](https://github.com/Cumulocity-IoT/cumulocity-alarmapp/releases/latest).
 
 **This build can be distributed, but must be signed before deployed to devices.**
 
