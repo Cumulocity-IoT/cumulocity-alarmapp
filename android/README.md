@@ -28,7 +28,7 @@ The App can be built using the command line or using Android Studio.
 
 The created `APK` is located at this path `../app/build/outputs/apk`.
 
-The latest release can be found [here](https://github.com/SoftwareAG/cumulocity-alarmapp/releases/latest).
+The latest release can be found [here](https://github.com/Cumulocity-IoT/cumulocity-alarmapp/releases/latest).
 
 **This build contains an unsigned APK.**
 
