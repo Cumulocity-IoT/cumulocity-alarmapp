@@ -18,7 +18,7 @@ import UIKit
 
 extension UILabel: Localizeable {
     override open func didMoveToSuperview() {
-        _ = observe(\.text, options: [.initial, .new]) { _, _  in
+        _ = observe(\.text, options: [.initial, .new]) { _, _ in
             self.text = self.resolveTranslationKey(for: self.text)
         }
     }

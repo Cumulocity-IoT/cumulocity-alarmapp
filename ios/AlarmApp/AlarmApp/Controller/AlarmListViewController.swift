@@ -172,7 +172,11 @@ class AlarmListViewController: UITableViewController, AlarmListReloadDelegate, E
     }
 
     override func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
-        guard let headerView = tableView.dequeueReusableHeaderFooterView(withIdentifier: AlarmFilterTableHeader.identifier) as? AlarmFilterTableHeader else {
+        guard
+            let headerView = tableView.dequeueReusableHeaderFooterView(
+                withIdentifier: AlarmFilterTableHeader.identifier
+            ) as? AlarmFilterTableHeader
+        else {
             fatalError("Could not create AlarmFilterTableHeader")
         }
         headerView.alarmFilter = filter

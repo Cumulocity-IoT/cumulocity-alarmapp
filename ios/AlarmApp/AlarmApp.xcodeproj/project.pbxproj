@@ -83,6 +83,7 @@
 		30FD5B0F27F1ADD300F61F3F /* Credentials.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30FD5B0E27F1ADD300F61F3F /* Credentials.swift */; };
 		30FD5B1127F1C1C500F61F3F /* PushNotificationCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30FD5B1027F1C1C500F61F3F /* PushNotificationCenter.swift */; };
 		30FD5B1427F1CABA00F61F3F /* IQKeyboardManagerSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 30FD5B1327F1CABA00F61F3F /* IQKeyboardManagerSwift */; };
+		F1D0DC362CFDFB5F008EF7EC /* Cumulocity.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1D0DC352CFDFB5F008EF7EC /* Cumulocity.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -163,6 +164,7 @@
 		30FD5B1027F1C1C500F61F3F /* PushNotificationCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushNotificationCenter.swift; sourceTree = "<group>"; };
 		F1C9181E294300F70020DFCE /* .swiftlint.yml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.yaml; path = .swiftlint.yml; sourceTree = "<group>"; };
 		F1C918202943010A0020DFCE /* .swift-format */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ".swift-format"; sourceTree = "<group>"; };
+		F1D0DC352CFDFB5F008EF7EC /* Cumulocity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cumulocity.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -280,6 +282,7 @@
 				30534365299A595A00C6AF58 /* AlarmsApi.swift */,
 				303B1D1627FB0EA1006D079B /* Bundle.swift */,
 				3008B04C296C1A4800A05731 /* C8yAlarm.swift */,
+				F1D0DC352CFDFB5F008EF7EC /* Cumulocity.swift */,
 				3026475A27EE6A070014C8C8 /* UIStoryboard.swift */,
 				30CFCADA27CFB0FE0061BF71 /* UIStoryboardSegue.swift */,
 				30E1D0F227E50E9E00FCB4DA /* UITableView.swift */,
@@ -500,6 +503,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F1D0DC362CFDFB5F008EF7EC /* Cumulocity.swift in Sources */,
 				3008B04D296C1A4800A05731 /* C8yAlarm.swift in Sources */,
 				3026475B27EE6A070014C8C8 /* UIStoryboard.swift in Sources */,
 				303B1D1727FB0EA1006D079B /* Bundle.swift in Sources */,
@@ -713,19 +717,19 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = AlarmApp/AlarmApp.entitlements;
-				CODE_SIGN_IDENTITY = "iPhone Distribution";
-				CODE_SIGN_STYLE = Manual;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 2;
-				DEVELOPMENT_TEAM = U6GS52HNZ5;
+				DEVELOPMENT_TEAM = GJX3T26ZM3;
 				INFOPLIST_FILE = AlarmApp/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.1;
-				PRODUCT_BUNDLE_IDENTIFIER = com.softwareag.cumulocity.alarming.intune;
+				PRODUCT_BUNDLE_IDENTIFIER = com.cumulocity.alarming.dev;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE_SPECIFIER = "Cumulocity IoT Alarming Intune";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
@@ -737,19 +741,19 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = AlarmApp/AlarmApp.entitlements;
-				CODE_SIGN_IDENTITY = "iPhone Distribution";
-				CODE_SIGN_STYLE = Manual;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 2;
-				DEVELOPMENT_TEAM = U6GS52HNZ5;
+				DEVELOPMENT_TEAM = GJX3T26ZM3;
 				INFOPLIST_FILE = AlarmApp/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.1;
-				PRODUCT_BUNDLE_IDENTIFIER = com.softwareag.cumulocity.alarming.intune;
+				PRODUCT_BUNDLE_IDENTIFIER = com.cumulocity.alarming.dev;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE_SPECIFIER = "Cumulocity IoT Alarming Intune";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
 			};

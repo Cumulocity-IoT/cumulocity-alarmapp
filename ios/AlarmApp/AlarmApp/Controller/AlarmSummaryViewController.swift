@@ -66,14 +66,14 @@ class AlarmSummaryViewController: UIViewController {
                         self.buildAction(for: C8yAlarm.C8ySeverity.warning, current: severity),
                         self.buildAction(for: C8yAlarm.C8ySeverity.minor, current: severity),
                         self.buildAction(for: C8yAlarm.C8ySeverity.major, current: severity),
-                        self.buildAction(for: C8yAlarm.C8ySeverity.critical, current: severity)
+                        self.buildAction(for: C8yAlarm.C8ySeverity.critical, current: severity),
                     ])
                 }
                 if let status = a.status {
                     self.modifyStatusButton.menu = UIMenu(children: [
                         self.buildAction(for: C8yAlarm.C8yStatus.active, current: status),
                         self.buildAction(for: C8yAlarm.C8yStatus.acknowledged, current: status),
-                        self.buildAction(for: C8yAlarm.C8yStatus.cleared, current: status)
+                        self.buildAction(for: C8yAlarm.C8yStatus.cleared, current: status),
                     ])
                 }
             }
@@ -123,13 +123,16 @@ class AlarmSummaryViewController: UIViewController {
         let alarmsApi = Cumulocity.Core.shared.alarms.alarmsApi
         alarmsApi.updateAlarm(body: alarm, id: id)
             .receive(on: DispatchQueue.main)
-            .sink(receiveCompletion: {_ in
-                self.modifySeverityButton.configuration?.showsActivityIndicator = false
-                self.modifyStatusButton.configuration?.showsActivityIndicator = false
-            }, receiveValue: {value in
-                self.alarm = value
-                self.delegate?.receivedUpdatedAlarm(alarm: self.alarm)
-            })
+            .sink(
+                receiveCompletion: { _ in
+                    self.modifySeverityButton.configuration?.showsActivityIndicator = false
+                    self.modifyStatusButton.configuration?.showsActivityIndicator = false
+                },
+                receiveValue: { value in
+                    self.alarm = value
+                    self.delegate?.receivedUpdatedAlarm(alarm: self.alarm)
+                }
+            )
             .store(in: &self.cancellableSet)
     }
 
@@ -138,13 +141,16 @@ class AlarmSummaryViewController: UIViewController {
         if let auditSource = alarm {
             auditsApi.getAuditRecords(pageSize: 150, source: auditSource.id)
                 .receive(on: DispatchQueue.main)
-                .sink(receiveCompletion: {_ in
-                }, receiveValue: {collection in
-                    self.auditRecords =
-                        (collection.auditRecords?.sorted {
-                            ($0.creationTime ?? "") > ($1.creationTime ?? "")
-                        }) ?? []
-                })
+                .sink(
+                    receiveCompletion: { _ in
+                    },
+                    receiveValue: { collection in
+                        self.auditRecords =
+                            (collection.auditRecords?.sorted {
+                                ($0.creationTime ?? "") > ($1.creationTime ?? "")
+                            }) ?? []
+                    }
+                )
                 .store(in: &self.cancellableSet)
         }
     }

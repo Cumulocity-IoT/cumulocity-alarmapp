@@ -30,18 +30,23 @@ class Credentials {
     var userId: String = ""
     var password: String
     var tenant: String
+    var otp: String?
+    var authorization: String?
+    var xsrfToken: String?
 
-    init(forUser userName: String, password: String, tenant: String) {
+    init(forUser userName: String, password: String, tenant: String, otp: String? = nil) {
         self.userName = userName
         self.password = password
         self.tenant = tenant
+        self.otp = otp
     }
 
-    private init(forUser userName: String, userId: String, password: String, tenant: String) {
+    private init(forUser userName: String, userId: String, password: String, tenant: String, otp: String? = nil) {
         self.userName = userName
         self.userId = userId
         self.password = password
         self.tenant = tenant
+        self.otp = otp
     }
 
     static func defaults() -> PartialCredentials {
@@ -54,12 +59,15 @@ class Credentials {
         let userName = UserDefaults.standard.string(forKey: Keys.userName.rawValue)
         let userId = UserDefaults.standard.string(forKey: Keys.userId.rawValue)
         let tenant = UserDefaults.standard.string(forKey: Keys.tenant.rawValue)
+
         guard let u = userName, let t = tenant, let id = userId else {
             return nil
         }
+
         guard let properties = Strongbox().unarchive(objectForKey: Self.serviceName) as? [String: String] else {
             return nil
         }
+
         if let password = properties["password"] {
             return Credentials(forUser: u, userId: id, password: password, tenant: t)
         }
@@ -72,8 +80,11 @@ class Credentials {
         UserDefaults.standard.set(self.userId, forKey: Keys.userId.rawValue)
         UserDefaults.standard.set(self.tenant, forKey: Keys.tenant.rawValue)
         // userName, password are protected by isValid()
+
         let properties = [
             "password": password,
+            "authorization": authorization,
+            "xsrfToken": xsrfToken,
         ]
         _ = Strongbox().archive(properties, key: Self.serviceName)
     }
