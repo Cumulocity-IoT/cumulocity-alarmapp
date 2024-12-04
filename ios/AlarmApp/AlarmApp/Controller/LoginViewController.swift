@@ -90,13 +90,28 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         }
 
         Task { @MainActor in
-            let credentials = Credentials(forUser: user, password: password, tenant: tenant, otp: self.otp)
-            CumulocityApi.shared().initRequestBuilder(forCredentials: credentials)
             sender.configuration?.showsActivityIndicator = true
+            let credentials = Credentials(
+                forUser: user,
+                password: password,
+                tenant: tenant
+            )
+            credentials.otp = self.otp
 
             do {
-                let loginOption = try await Cumulocity.getLoginOption()
-                try? await CumulocityApi.shared().login(credentials: credentials, loginOption: loginOption)
+                guard let tenantUrl = URL(string: tenant) else {
+                    // todo: present error for invalid url
+                    return
+                }
+                let loginOptions = try await Cumulocity.getLoginOptions(url: tenantUrl)
+                if let oauthOption = loginOptions?["OAUTH2_INTERNAL"] {
+                    try? await CumulocityApi.shared().login(credentials: credentials, loginOption: oauthOption)
+                } else if let basicAuthOption = loginOptions?["BASIC"] {
+                    CumulocityApi.shared().initRequestBuilder(forCredentials: credentials, loginOption: basicAuthOption)
+                } else {
+                    // todo: present error for unsupported auth type
+                    return
+                }
 
                 let usersApi = Cumulocity.Core.shared.users.currentUserApi
                 let value = try await usersApi.getCurrentUser().awaitValue()

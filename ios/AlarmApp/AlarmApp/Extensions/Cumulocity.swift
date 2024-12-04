@@ -30,54 +30,42 @@ extension Cumulocity {
 
 // MARK: - Custom Requests
 extension Cumulocity {
-    static func getTenantId(
-        requestBuilder: URLRequestBuilder = Cumulocity.Core.shared.requestBuilder
-    ) async throws -> String {
-        // register properties required for decoding the fragements
-        let api = TenantsApi(requestBuilder: requestBuilder)
-        return try await api.getCurrentTenant()
-            .tryMap { tenantOptions in
-                guard let name = tenantOptions.name else {
-                    throw Cumulocity.UnexpectedError()
-                }
-                return name
-            }
-            .eraseToAnyPublisher()
-            .awaitValue()
-    }
+    struct InvalidURLError: Error {}
 
-    static func getLoginOption(
-        requestBuilder: URLRequestBuilder = Cumulocity.Core.shared.requestBuilder
-    ) async throws -> C8yLoginOption? {
-        let api = LoginOptionsApi(requestBuilder: requestBuilder)
+    static func getLoginOptions(url: URL) async throws -> [String: C8yLoginOption]? {
+        guard let host = url.host else {
+            throw InvalidURLError()
+        }
 
+        let builder = URLRequestBuilder()
+            .set(scheme: url.scheme ?? "https")
+            .set(host: host)
+
+        let api = LoginOptionsApi(requestBuilder: builder)
         return try await api.getLoginOptions()
-            .map { collection -> [C8yLoginOption] in
+            .map { collection -> [String: C8yLoginOption]? in
                 collection.loginOptions?
                     .filter {
-                        $0.visibleOnLoginPage == true && $0.userManagementSource == "INTERNAL"
-                            && $0.type == "OAUTH2_INTERNAL"
-                    } ?? []
+                        $0.userManagementSource == "INTERNAL"
+                    }
+                    .reduce(into: [String: C8yLoginOption]()) { dict, opt in
+                        if let type = opt.type {
+                            dict[type] = opt
+                        }
+                    }
             }
-            .map(\.first)
             .eraseToAnyPublisher()
             .awaitValue()
     }
-}
 
-extension Cumulocity {
-    struct UnexpectedError: Error {}
-    struct LoginFailedError: Error {}
 }
 
 // MARK: - Combine Publisher Extensions
-extension Publishers {
-    struct MissingOutputError: Error {}
-}
-
 private class AwaitWrapper {
     var cancellable: AnyCancellable?
     var didReceiveValue = false
+
+    struct MissingOutputError: Error {}
 }
 
 extension Publisher {
@@ -110,7 +98,7 @@ extension Publisher {
                             case .finished:
                                 if !cancellableWrapper.didReceiveValue {
                                     continuation.resume(
-                                        throwing: Publishers.MissingOutputError()
+                                        throwing: AwaitWrapper.MissingOutputError()
                                     )
                                 }
                             }
@@ -124,117 +112,6 @@ extension Publisher {
                 }
             }
         )
-    }
-
-    internal func delayFailure<T>(
-        for delay: T.SchedulerTimeType.Stride,
-        scheduler: T
-    ) -> AnyPublisher<Output, Failure> where T: Scheduler {
-        self.catch { error -> AnyPublisher<Output, Failure> in
-            guard delay > 0 else {
-                return self.eraseToAnyPublisher()
-            }
-            return Deferred {
-                Future<Output, Failure> { completion -> Void in
-                    scheduler.schedule(after: scheduler.now.advanced(by: delay)) {
-                        completion(.failure(error))
-                    }
-                }
-            }.eraseToAnyPublisher()
-        }
-        .eraseToAnyPublisher()
-    }
-
-    func retryWithDelay(
-        retries: Int,
-        delay: Double,
-        if condition: @escaping (Failure, Int) -> Bool = { _, _ in true }
-    ) -> Publishers.DelayedRetry<Self, DispatchQueue> {
-        Publishers.DelayedRetry(
-            publisher: self,
-            retries: retries,
-            count: 0,
-            delay: .seconds(delay),
-            scheduler: DispatchQueue.main,
-            condition: condition
-        )
-    }
-
-    /// Use a serial queue, not a concurrent one as for example DispatchQueue.global()
-    func retryWithDelay<T>(
-        retries: Int,
-        delay: T.SchedulerTimeType.Stride,
-        scheduler: T,
-        if condition: @escaping (Failure, Int) -> Bool = { _, _ in true }
-    ) -> Publishers.DelayedRetry<Self, T> where T: Scheduler {
-        Publishers.DelayedRetry(
-            publisher: self,
-            retries: retries,
-            count: 0,
-            delay: delay,
-            scheduler: scheduler,
-            condition: condition
-        )
-    }
-}
-
-extension Publishers {
-    internal struct DelayedRetry<P: Publisher, T: Scheduler>: Publisher {
-        typealias Output = P.Output
-        typealias Failure = P.Failure
-
-        let publisher: P
-        let retries: Int
-        let count: Int
-        let delay: T.SchedulerTimeType.Stride
-        let scheduler: T
-        let condition: (P.Failure, Int) -> Bool
-
-        func retryOrFail(_ error: P.Failure) -> AnyPublisher<P.Output, P.Failure> {
-            if retries > 0 && !Task.isCancelled {
-                return DelayedRetry(
-                    publisher: publisher,
-                    retries: retries - 1,
-                    count: count + 1,
-                    delay: delay,
-                    scheduler: scheduler,
-                    condition: condition
-                )
-                .eraseToAnyPublisher()
-            } else {
-                return Fail(error: error).eraseToAnyPublisher()
-            }
-        }
-
-        func receive<S>(subscriber: S) where S: Subscriber, Failure == S.Failure, Output == S.Input {
-            guard retries > 0 else { return publisher.receive(subscriber: subscriber) }
-
-            if delay > 0 {
-                return
-                    publisher
-                    .catch { (error: P.Failure) -> AnyPublisher<Output, Failure> in
-                        if !condition(error, count + 1) {
-                            return Fail(error: error).eraseToAnyPublisher()
-                        }
-                        return Just(())
-                            .setFailureType(to: P.Failure.self)
-                            .delay(for: delay, scheduler: scheduler)
-                            .flatMap { _ in
-                                retryOrFail(error).eraseToAnyPublisher()
-                            }
-                            .eraseToAnyPublisher()
-                    }
-                    .receive(subscriber: subscriber)
-            } else {
-                return publisher.catch { (error: P.Failure) -> AnyPublisher<Output, Failure> in
-                    if !condition(error, count + 1) {
-                        return Fail(error: error).eraseToAnyPublisher()
-                    }
-                    return retryOrFail(error)
-                }
-                .receive(subscriber: subscriber)
-            }
-        }
     }
 }
 
@@ -266,12 +143,5 @@ extension Publisher where Output == Data {
             return data
         }
         .eraseToAnyPublisher()
-    }
-}
-
-extension Task where Success == Never, Failure == Never {
-    static func sleep(seconds: Double) async throws {
-        let duration = UInt64(seconds * 1_000_000_000)
-        try await Task.sleep(nanoseconds: duration)
     }
 }

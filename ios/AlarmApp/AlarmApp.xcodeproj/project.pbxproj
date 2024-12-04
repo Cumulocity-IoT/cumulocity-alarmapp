@@ -84,6 +84,7 @@
 		30FD5B1127F1C1C500F61F3F /* PushNotificationCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30FD5B1027F1C1C500F61F3F /* PushNotificationCenter.swift */; };
 		30FD5B1427F1CABA00F61F3F /* IQKeyboardManagerSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 30FD5B1327F1CABA00F61F3F /* IQKeyboardManagerSwift */; };
 		F1D0DC362CFDFB5F008EF7EC /* Cumulocity.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1D0DC352CFDFB5F008EF7EC /* Cumulocity.swift */; };
+		F1D0DC382CFF96DD008EF7EC /* AuthAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1D0DC372CFF96D6008EF7EC /* AuthAdapter.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -165,6 +166,7 @@
 		F1C9181E294300F70020DFCE /* .swiftlint.yml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.yaml; path = .swiftlint.yml; sourceTree = "<group>"; };
 		F1C918202943010A0020DFCE /* .swift-format */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ".swift-format"; sourceTree = "<group>"; };
 		F1D0DC352CFDFB5F008EF7EC /* Cumulocity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cumulocity.swift; sourceTree = "<group>"; };
+		F1D0DC372CFF96D6008EF7EC /* AuthAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthAdapter.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -260,6 +262,7 @@
 		3056B76927CE603300ED443B /* Network */ = {
 			isa = PBXGroup;
 			children = (
+				F1D0DC372CFF96D6008EF7EC /* AuthAdapter.swift */,
 				30FD5B0E27F1ADD300F61F3F /* Credentials.swift */,
 				3056B76A27CE604F00ED443B /* CumulocityApi.swift */,
 			);
@@ -552,6 +555,7 @@
 				3008B049296825B300A05731 /* Localizeable.swift in Sources */,
 				3008B03F2961C22000A05731 /* NewCommentViewController.swift in Sources */,
 				30E1D0D627E3E2BB00FCB4DA /* RegistrationsApi.swift in Sources */,
+				F1D0DC382CFF96DD008EF7EC /* AuthAdapter.swift in Sources */,
 				30C43B0127D12A5B009EA909 /* AlarmListViewController.swift in Sources */,
 				3008B03A295F176200A05731 /* UITableViewHeaderFooterView.swift in Sources */,
 				30C660542886A62600A7AA39 /* SubscribedAlarmFilter.swift in Sources */,
