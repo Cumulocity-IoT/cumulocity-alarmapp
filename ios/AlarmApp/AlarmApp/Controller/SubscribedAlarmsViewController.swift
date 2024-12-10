@@ -18,8 +18,10 @@ import Combine
 import CumulocityCoreLibrary
 import UIKit
 
-class SubscribedAlarmsViewController: UITableViewController, SubscribedAlarmListReloadDelegate {
-    private var data = C8yAlarmCollection()
+class SubscribedAlarmsViewController: UITableViewController, SubscribedAlarmListReloadDelegate,
+    UITableViewDataSourcePrefetching
+{
+    private var viewModel = SubscribedAlarmsViewModel()
     private var selectedAlarm: C8yAlarm?
     private var cancellableSet = Set<AnyCancellable>()
 
@@ -28,40 +30,64 @@ class SubscribedAlarmsViewController: UITableViewController, SubscribedAlarmList
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         UITableViewController.prepareForAlarms(with: self.tableView, delegate: openFilterDelegate)
+        self.tableView.prefetchDataSource = self
         self.view.backgroundColor = .clear
         reload()
     }
 
     func reload() {
+        self.viewModel = SubscribedAlarmsViewModel()
+        fetchNextAlarms()
+    }
+
+    private func fetchNextAlarms() {
         let filter = SubscribedAlarmFilter.shared
         fetchAlarms(byFilter: filter, byDeviceId: filter.resolvedDeviceId)
     }
 
     private func fetchAlarms(byFilter filter: AlarmFilter, byDeviceId deviceId: String?) {
         let alarmsApi = Cumulocity.Core.shared.alarms.alarmsApi
-        let publisher = alarmsApi.getAlarmsByFilter(filter: filter, source: deviceId)
+        let publisher = alarmsApi.getAlarmsByFilter(filter: filter, page: self.viewModel.nextPage(), source: deviceId)
         publisher.receive(on: DispatchQueue.main)
             .sink(
                 receiveCompletion: { _ in
                 },
                 receiveValue: { collection in
-                    self.data = collection
-                    self.tableView.reloadData()
+                    let currentPage = collection.statistics?.currentPage ?? 1
+                    self.viewModel.pageStatistics = collection.statistics
+                    self.viewModel.alarms.append(contentsOf: collection.alarms ?? [])
+                    if currentPage > 1 {
+                        let indexPathsToReload = self.viewModel.calculateIndexPathsToReload(
+                            from: collection.alarms ?? []
+                        )
+                        self.onFetchAlarmsCompleted(with: indexPathsToReload)
+                    } else {
+                        self.onFetchAlarmsCompleted(with: .none)
+                    }
                 }
             )
             .store(in: &self.cancellableSet)
     }
 
+    private func onFetchAlarmsCompleted(with newIndexPathsToReload: [IndexPath]?) {
+        guard let newIndexPathsToReload = newIndexPathsToReload else {
+            self.tableView.reloadData()
+            return
+        }
+        let indexPathsToReload = visibleIndexPathsToReload(intersecting: newIndexPathsToReload)
+        tableView.reloadRows(at: indexPathsToReload, with: .automatic)
+    }
+
     // MARK: - Table view data source
 
     override func numberOfSections(in tableView: UITableView) -> Int {
-        let alarmCount = data.alarms?.count ?? 0
-        tableView.backgroundView?.isHidden = alarmCount > 0
-        return alarmCount > 0 ? 1 : 0
+        let hasAlarms = viewModel.currentCount > 0
+        tableView.backgroundView?.isHidden = hasAlarms
+        return hasAlarms ? 1 : 0
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        data.alarms?.count ?? 0
+        self.viewModel.totalCount
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -69,7 +95,11 @@ class SubscribedAlarmsViewController: UITableViewController, SubscribedAlarmList
             withIdentifier: AlarmListItem.identifier,
             for: indexPath
         ) as? AlarmListItem {
-            cell.bind(with: data.alarms?[indexPath.item])
+            if isLoadingCell(for: indexPath) {
+                cell.bind(with: .none)
+            } else {
+                cell.bind(with: self.viewModel.alarm(at: indexPath.item))
+            }
             return cell
         }
         fatalError("Cannot create AlarmListItem")
@@ -77,7 +107,7 @@ class SubscribedAlarmsViewController: UITableViewController, SubscribedAlarmList
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: false)
-        self.selectedAlarm = data.alarms?[indexPath.item]
+        self.selectedAlarm = self.viewModel.alarm(at: indexPath.item)
         performSegue(withIdentifier: UIStoryboardSegue.toAlarmDetails, sender: self)
     }
 
@@ -92,6 +122,12 @@ class SubscribedAlarmsViewController: UITableViewController, SubscribedAlarmList
         fatalError("Cannot create ListViewHeaderItem")
     }
 
+    func tableView(_ tableView: UITableView, prefetchRowsAt indexPaths: [IndexPath]) {
+        if indexPaths.contains(where: isLoadingCell) {
+            fetchNextAlarms()
+        }
+    }
+
     // MARK: - Navigation
 
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
@@ -100,6 +136,54 @@ class SubscribedAlarmsViewController: UITableViewController, SubscribedAlarmList
                 destination.alarm = self.selectedAlarm
             }
         }
+    }
+}
+
+extension SubscribedAlarmsViewController {
+    /// cell at that index path is beyond the visible alarm count
+    fileprivate func isLoadingCell(for indexPath: IndexPath) -> Bool {
+        indexPath.row >= viewModel.currentCount
+    }
+
+    /// alculates the cells of the table view that need to reload when a new page is received
+    fileprivate func visibleIndexPathsToReload(intersecting indexPaths: [IndexPath]) -> [IndexPath] {
+        let indexPathsForVisibleRows = tableView.indexPathsForVisibleRows ?? []
+        let indexPathsIntersection = Set(indexPathsForVisibleRows).intersection(indexPaths)
+        return Array(indexPathsIntersection)
+    }
+}
+
+final class SubscribedAlarmsViewModel {
+    var alarms: [C8yAlarm] = []
+    var pageStatistics: C8yPageStatistics? = C8yPageStatistics()
+
+    init() {
+    }
+
+    var totalCount: Int {
+        pageStatistics?.totalElements ?? 0
+    }
+
+    var currentCount: Int {
+        alarms.count
+    }
+
+    func alarm(at index: Int) -> C8yAlarm? {
+        alarms[index]
+    }
+
+    func nextPage() -> Int {
+        if let currentPage = pageStatistics?.currentPage {
+            return currentPage + 1
+        } else {
+            return 1
+        }
+    }
+
+    func calculateIndexPathsToReload(from newAlarms: [C8yAlarm]) -> [IndexPath] {
+        let startIndex = currentCount - newAlarms.count
+        let endIndex = startIndex + newAlarms.count
+        return (startIndex..<endIndex).map { IndexPath(row: $0, section: 0) }
     }
 }
 

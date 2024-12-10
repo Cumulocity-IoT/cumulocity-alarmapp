@@ -19,7 +19,9 @@ import Combine
 import CumulocityCoreLibrary
 
 extension AlarmsApi {
-    public func getAlarmsByFilter(filter: AlarmFilter, source: String?) -> AnyPublisher<C8yAlarmCollection, Error> {
+    public func getAlarmsByFilter(filter: AlarmFilter, page: Int? = 1, source: String?) -> AnyPublisher<
+        C8yAlarmCollection, Error
+    > {
         var severities: [String] = []
         for s in filter.severity {
             severities.append(s.rawValue)
@@ -34,6 +36,15 @@ extension AlarmsApi {
                 types.append(singleAlarmType)
             }
         }
-        return self.getAlarms(pageSize: 50, severity: severities, source: source, status: statuses, type: types)
+        return self.getAlarms(
+            currentPage: page,
+            pageSize: 10,
+            severity: severities,
+            source: source,
+            status: statuses,
+            type: types,
+            withTotalElements: true,
+            withTotalPages: true
+        )
     }
 }
