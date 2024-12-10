@@ -38,7 +38,7 @@ extension AlarmsApi {
         }
         return self.getAlarms(
             currentPage: page,
-            pageSize: 10,
+            pageSize: 50,
             severity: severities,
             source: source,
             status: statuses,
