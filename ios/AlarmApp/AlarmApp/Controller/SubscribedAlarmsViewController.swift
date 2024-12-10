@@ -36,6 +36,7 @@ class SubscribedAlarmsViewController: UITableViewController, SubscribedAlarmList
     }
 
     func reload() {
+        // filter is modified so we remove everything cached and load again
         self.viewModel = SubscribedAlarmsViewModel()
         fetchNextAlarms()
     }
@@ -46,6 +47,9 @@ class SubscribedAlarmsViewController: UITableViewController, SubscribedAlarmList
     }
 
     private func fetchAlarms(byFilter filter: AlarmFilter, byDeviceId deviceId: String?) {
+        guard viewModel.shouldLoadMorePages() else {
+            return
+        }
         let alarmsApi = Cumulocity.Core.shared.alarms.alarmsApi
         let publisher = alarmsApi.getAlarmsByFilter(filter: filter, page: self.viewModel.nextPage(), source: deviceId)
         publisher.receive(on: DispatchQueue.main)
@@ -55,7 +59,7 @@ class SubscribedAlarmsViewController: UITableViewController, SubscribedAlarmList
                 receiveValue: { collection in
                     let currentPage = collection.statistics?.currentPage ?? 1
                     self.viewModel.pageStatistics = collection.statistics
-                    self.viewModel.alarms.append(contentsOf: collection.alarms ?? [])
+                    self.viewModel.appendAlarms(toPage: currentPage, newAlarms: collection.alarms ?? [])
                     if currentPage > 1 {
                         let indexPathsToReload = self.viewModel.calculateIndexPathsToReload(
                             from: collection.alarms ?? []
@@ -153,8 +157,12 @@ extension SubscribedAlarmsViewController {
     }
 }
 
+struct Page {
+    var elements: [C8yAlarm]  // Use a generic type if needed
+}
+
 final class SubscribedAlarmsViewModel {
-    var alarms: [C8yAlarm] = []
+    private(set) var pages: [Int: Page] = [:]
     var pageStatistics: C8yPageStatistics? = C8yPageStatistics()
 
     init() {
@@ -165,11 +173,25 @@ final class SubscribedAlarmsViewModel {
     }
 
     var currentCount: Int {
-        alarms.count
+        pages.values.flatMap { $0.elements }.count
+    }
+
+    func appendAlarms(toPage pageIndex: Int, newAlarms: [C8yAlarm]) {
+        if pages[pageIndex] == nil {
+            pages[pageIndex] = Page(elements: [])
+        }
+        pages[pageIndex]?.elements = newAlarms
     }
 
     func alarm(at index: Int) -> C8yAlarm? {
-        alarms[index]
+        guard index >= 0 && index < currentCount else {
+            return nil
+        }
+        // Flatten pages while preserving page order
+        let allElements = pages.keys.sorted()
+            .compactMap { pages[$0]?.elements }
+            .flatMap { $0 }
+        return allElements[index]
     }
 
     func nextPage() -> Int {
@@ -177,6 +199,14 @@ final class SubscribedAlarmsViewModel {
             return currentPage + 1
         } else {
             return 1
+        }
+    }
+
+    func shouldLoadMorePages() -> Bool {
+        if let currentPage = pageStatistics?.currentPage, let totalPages = pageStatistics?.totalPages {
+            return currentPage <= totalPages
+        } else {
+            return true
         }
     }
 
