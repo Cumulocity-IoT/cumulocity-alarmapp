@@ -20,7 +20,7 @@ extension UITableViewController {
     static func prepareForAlarms(
         with tableView: UITableView,
         delegate: EmptyAlarmsDelegate?
-    ){
+    ) {
         AlarmListItem.register(for: tableView)
         ListViewHeaderItem.register(for: tableView)
         tableView.tableFooterView = UIView()

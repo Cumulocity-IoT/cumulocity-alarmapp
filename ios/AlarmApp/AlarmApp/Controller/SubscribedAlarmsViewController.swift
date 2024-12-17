@@ -21,7 +21,7 @@ import UIKit
 class SubscribedAlarmsViewController: UITableViewController, SubscribedAlarmListReloadDelegate,
     UITableViewDataSourcePrefetching
 {
-    private var viewModel = SubscribedAlarmsViewModel()
+    private var viewModel = PaginatedViewModel()
     private var selectedAlarm: C8yAlarm?
     private var cancellableSet = Set<AnyCancellable>()
 
@@ -37,7 +37,7 @@ class SubscribedAlarmsViewController: UITableViewController, SubscribedAlarmList
 
     func reload() {
         // filter is modified so we remove everything cached and load again
-        self.viewModel = SubscribedAlarmsViewModel()
+        self.viewModel = PaginatedViewModel()
         fetchNextAlarms()
     }
 
@@ -99,7 +99,7 @@ class SubscribedAlarmsViewController: UITableViewController, SubscribedAlarmList
             withIdentifier: AlarmListItem.identifier,
             for: indexPath
         ) as? AlarmListItem {
-            if isLoadingCell(for: indexPath) {
+            if self.viewModel.isLoadingCell(for: indexPath) {
                 cell.bind(with: .none)
             } else {
                 cell.bind(with: self.viewModel.alarm(at: indexPath.item))
@@ -127,7 +127,7 @@ class SubscribedAlarmsViewController: UITableViewController, SubscribedAlarmList
     }
 
     func tableView(_ tableView: UITableView, prefetchRowsAt indexPaths: [IndexPath]) {
-        if indexPaths.contains(where: isLoadingCell) {
+        if indexPaths.contains(where: self.viewModel.isLoadingCell) {
             fetchNextAlarms()
         }
     }
@@ -144,76 +144,11 @@ class SubscribedAlarmsViewController: UITableViewController, SubscribedAlarmList
 }
 
 extension SubscribedAlarmsViewController {
-    /// cell at that index path is beyond the visible alarm count
-    fileprivate func isLoadingCell(for indexPath: IndexPath) -> Bool {
-        indexPath.row >= viewModel.currentCount
-    }
-
     /// alculates the cells of the table view that need to reload when a new page is received
     fileprivate func visibleIndexPathsToReload(intersecting indexPaths: [IndexPath]) -> [IndexPath] {
         let indexPathsForVisibleRows = tableView.indexPathsForVisibleRows ?? []
         let indexPathsIntersection = Set(indexPathsForVisibleRows).intersection(indexPaths)
         return Array(indexPathsIntersection)
-    }
-}
-
-struct Page {
-    var elements: [C8yAlarm]  // Use a generic type if needed
-}
-
-final class SubscribedAlarmsViewModel {
-    private(set) var pages: [Int: Page] = [:]
-    var pageStatistics: C8yPageStatistics? = C8yPageStatistics()
-
-    init() {
-    }
-
-    var totalCount: Int {
-        pageStatistics?.totalElements ?? 0
-    }
-
-    var currentCount: Int {
-        pages.values.flatMap { $0.elements }.count
-    }
-
-    func appendAlarms(toPage pageIndex: Int, newAlarms: [C8yAlarm]) {
-        if pages[pageIndex] == nil {
-            pages[pageIndex] = Page(elements: [])
-        }
-        pages[pageIndex]?.elements = newAlarms
-    }
-
-    func alarm(at index: Int) -> C8yAlarm? {
-        guard index >= 0 && index < currentCount else {
-            return nil
-        }
-        // Flatten pages while preserving page order
-        let allElements = pages.keys.sorted()
-            .compactMap { pages[$0]?.elements }
-            .flatMap { $0 }
-        return allElements[index]
-    }
-
-    func nextPage() -> Int {
-        if let currentPage = pageStatistics?.currentPage {
-            return currentPage + 1
-        } else {
-            return 1
-        }
-    }
-
-    func shouldLoadMorePages() -> Bool {
-        if let currentPage = pageStatistics?.currentPage, let totalPages = pageStatistics?.totalPages {
-            return currentPage <= totalPages
-        } else {
-            return true
-        }
-    }
-
-    func calculateIndexPathsToReload(from newAlarms: [C8yAlarm]) -> [IndexPath] {
-        let startIndex = currentCount - newAlarms.count
-        let endIndex = startIndex + newAlarms.count
-        return (startIndex..<endIndex).map { IndexPath(row: $0, section: 0) }
     }
 }
 
