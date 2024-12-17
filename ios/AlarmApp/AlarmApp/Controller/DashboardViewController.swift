@@ -90,7 +90,7 @@ class DashboardViewController: UIViewController, AlarmListReloadDelegate, EmptyA
     }
 
     ///  update tag list for receiving push notifications
-    func fetchAlarms() {
+    func reload() {
         SubscribedAlarmFilter.shared.resolvedDeviceId = nil
         if let deviceName = SubscribedAlarmFilter.shared.deviceName {
             let managedObjectsApi = Cumulocity.Core.shared.inventory.managedObjectsApi
