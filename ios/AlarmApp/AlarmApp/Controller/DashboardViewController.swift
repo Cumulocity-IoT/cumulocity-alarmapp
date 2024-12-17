@@ -68,58 +68,29 @@ class DashboardViewController: UIViewController, AlarmListReloadDelegate, EmptyA
 
     private func fetchAlarmCount() {
         let alarmsApi = Cumulocity.Core.shared.alarms.alarmsApi
-        alarmsApi.getNumberOfAlarms(
-            severity: [C8yAlarm.C8ySeverity.critical.rawValue],
-            status: [C8yAlarm.C8yStatus.active.rawValue]
-        )
-        .receive(on: DispatchQueue.main)
-        .sink(
-            receiveCompletion: { _ in
-            },
-            receiveValue: { value in
-                self.criticalCountItem.countLabel.text = String(value)
+        let arguments = [
+            C8yAlarm.C8ySeverity.critical, C8yAlarm.C8ySeverity.major, C8yAlarm.C8ySeverity.minor,
+            C8yAlarm.C8ySeverity.warning,
+        ]
+        let textfields = [self.criticalCountItem, self.majorCountItem, self.minorCountItem, self.warningCountItem]
+        arguments.enumerated().publisher
+            .flatMap { index, arg in
+                return alarmsApi.getAlarms(
+                    pageSize: 1,
+                    severity: [arg.rawValue],
+                    status: [C8yAlarm.C8yStatus.active.rawValue],
+                    withTotalElements: true
+                )
+                .map { $0.statistics?.totalElements ?? 0 }
+                .receive(on: DispatchQueue.main)
+                .catch { _ in Just(0) }
+                .map { (index, $0) }
+                .eraseToAnyPublisher()
             }
-        )
-        .store(in: &self.cancellableSet)
-        alarmsApi.getNumberOfAlarms(
-            severity: [C8yAlarm.C8ySeverity.major.rawValue],
-            status: [C8yAlarm.C8yStatus.active.rawValue]
-        )
-        .receive(on: DispatchQueue.main)
-        .sink(
-            receiveCompletion: { _ in
-            },
-            receiveValue: { value in
-                self.majorCountItem.countLabel.text = String(value)
+            .sink { index, result in
+                textfields[index]?.countLabel.text = String(result ?? 0)
             }
-        )
-        .store(in: &self.cancellableSet)
-        alarmsApi.getNumberOfAlarms(
-            severity: [C8yAlarm.C8ySeverity.minor.rawValue],
-            status: [C8yAlarm.C8yStatus.active.rawValue]
-        )
-        .receive(on: DispatchQueue.main)
-        .sink(
-            receiveCompletion: { _ in
-            },
-            receiveValue: { value in
-                self.minorCountItem.countLabel.text = String(value)
-            }
-        )
-        .store(in: &self.cancellableSet)
-        alarmsApi.getNumberOfAlarms(
-            severity: [C8yAlarm.C8ySeverity.warning.rawValue],
-            status: [C8yAlarm.C8yStatus.active.rawValue]
-        )
-        .receive(on: DispatchQueue.main)
-        .sink(
-            receiveCompletion: { _ in
-            },
-            receiveValue: { value in
-                self.warningCountItem.countLabel.text = String(value)
-            }
-        )
-        .store(in: &self.cancellableSet)
+            .store(in: &self.cancellableSet)
     }
 
     ///  update tag list for receiving push notifications
