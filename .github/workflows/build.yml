@@ -38,7 +38,7 @@ jobs:
           zip "$buildName.ipa.zip" "$buildName.ipa"
         working-directory: ios/AlarmApp
       - name: Archive Build (ZIPs)
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         env:
           BUILD_NUMBER: ${{ steps.build.outputs.calculated_build_number }}
           MARKETING_VERSION: ${{ steps.build.outputs.marketing_build_version }}
