@@ -1,9 +1,10 @@
 {
+  "originHash" : "894cebe1937caf51d64a44da982a158d9b8254b0fed0cc3b475be2e020af0837",
   "pins" : [
     {
       "identity" : "cumulocity-clients-swift",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/Cumulocity-IoT/cumulocity-clients-swift",
+      "location" : "https://github.com/cumulocity-iot/cumulocity-clients-swift",
       "state" : {
         "branch" : "main",
         "revision" : "fd6203c62a8f7ca6b04fdde22f8c472359e1c3ae"
@@ -37,5 +38,5 @@
       }
     }
   ],
-  "version" : 2
+  "version" : 3
 }

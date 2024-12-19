@@ -789,7 +789,7 @@
 		};
 		30FBB9A227CCEEEC008302D0 /* XCRemoteSwiftPackageReference "cumulocity-clients-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/SoftwareAG/cumulocity-clients-swift";
+			repositoryURL = "https://github.com/Cumulocity-IoT/cumulocity-clients-swift";
 			requirement = {
 				branch = main;
 				kind = branch;

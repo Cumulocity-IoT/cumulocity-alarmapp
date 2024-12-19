@@ -35,7 +35,7 @@ class AlarmFilterViewController: UIViewController {
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        delegate?.fetchAlarms()
+        delegate?.reload()
     }
 
     override func viewDidLoad() {
