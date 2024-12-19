@@ -18,9 +18,9 @@ import Combine
 import CumulocityCoreLibrary
 import UIKit
 
-class DeviceAlarmsViewController: UITableViewController {
+class DeviceAlarmsViewController: UITableViewController, UITableViewDataSourcePrefetching {
     var source: C8yAlarm.C8ySource?
-    private var data = C8yAlarmCollection()
+    private var viewModel = PaginatedViewModel()
     private var selectedAlarm: C8yAlarm?
     private var cancellableSet = Set<AnyCancellable>()
 
@@ -32,36 +32,68 @@ class DeviceAlarmsViewController: UITableViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         UITableViewController.prepareForAlarms(with: self.tableView, delegate: nil)
+        self.tableView.prefetchDataSource = self
         self.view.backgroundColor = .clear
         fetchAlarms()
     }
 
     private func fetchAlarms() {
-        let alarmsApi = Cumulocity.Core.shared.alarms.alarmsApi
-
-        if let deviceId = source?.id {
-            alarmsApi.getAlarms(pageSize: 50, source: deviceId, status: [C8yAlarm.C8yStatus.active.rawValue])
-                .receive(on: DispatchQueue.main)
-                .sink(
-                    receiveCompletion: { _ in
-                    },
-                    receiveValue: { collection in
-                        self.data = collection
-                        self.tableView.reloadData()
-                    }
-                )
-                .store(in: &self.cancellableSet)
+        guard viewModel.shouldLoadMorePages() else {
+            return
         }
+        let alarmsApi = Cumulocity.Core.shared.alarms.alarmsApi
+        if let deviceId = source?.id {
+            alarmsApi.getAlarms(
+                currentPage: self.viewModel.nextPage(),
+                pageSize: 50,
+                source: deviceId,
+                status: [C8yAlarm.C8yStatus.active.rawValue],
+                withTotalElements: true,
+                withTotalPages: true
+            )
+            .receive(on: DispatchQueue.main)
+            .sink(
+                receiveCompletion: { _ in
+                },
+                receiveValue: { collection in
+                    let currentPage = collection.statistics?.currentPage ?? 1
+                    print(currentPage)
+                    self.viewModel.pageStatistics = collection.statistics
+                    self.viewModel.appendAlarms(toPage: currentPage, newAlarms: collection.alarms ?? [])
+                    if currentPage > 1 {
+                        let indexPathsToReload = self.viewModel.calculateIndexPathsToReload(
+                            from: collection.alarms ?? []
+                        )
+                        print(indexPathsToReload)
+                        self.onFetchAlarmsCompleted(with: indexPathsToReload)
+                    } else {
+                        self.onFetchAlarmsCompleted(with: .none)
+                    }
+                }
+            )
+            .store(in: &self.cancellableSet)
+        }
+    }
+
+    private func onFetchAlarmsCompleted(with newIndexPathsToReload: [IndexPath]?) {
+        guard let newIndexPathsToReload = newIndexPathsToReload else {
+            self.tableView.reloadData()
+            return
+        }
+        let indexPathsToReload = visibleIndexPathsToReload(intersecting: newIndexPathsToReload)
+        tableView.reloadRows(at: indexPathsToReload, with: .automatic)
     }
 
     // MARK: - Table view data source
 
     override func numberOfSections(in tableView: UITableView) -> Int {
-        (data.alarms?.isEmpty ?? false) ? 0 : 1
+        let hasAlarms = viewModel.currentCount > 0
+        tableView.backgroundView?.isHidden = hasAlarms
+        return hasAlarms ? 1 : 0
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        data.alarms?.count ?? 0
+        self.viewModel.totalCount
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -69,7 +101,11 @@ class DeviceAlarmsViewController: UITableViewController {
             withIdentifier: AlarmListItem.identifier,
             for: indexPath
         ) as? AlarmListItem {
-            cell.bind(with: data.alarms?[indexPath.item], ignoreDevice: true)
+            if self.viewModel.isLoadingCell(for: indexPath) {
+                cell.bind(with: .none)
+            } else {
+                cell.bind(with: self.viewModel.alarm(at: indexPath.item))
+            }
             return cell
         }
         fatalError("Could not create AlarmListItem")
@@ -77,7 +113,7 @@ class DeviceAlarmsViewController: UITableViewController {
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: false)
-        self.selectedAlarm = data.alarms?[indexPath.item]
+        self.selectedAlarm = self.viewModel.alarm(at: indexPath.item)
         performSegue(withIdentifier: UIStoryboardSegue.toAlarmDetails, sender: self)
     }
 
@@ -92,6 +128,12 @@ class DeviceAlarmsViewController: UITableViewController {
         fatalError("Could not create ListViewHeaderItem")
     }
 
+    func tableView(_ tableView: UITableView, prefetchRowsAt indexPaths: [IndexPath]) {
+        if indexPaths.contains(where: self.viewModel.isLoadingCell) {
+            fetchAlarms()
+        }
+    }
+
     // MARK: - Navigation
 
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
@@ -100,5 +142,14 @@ class DeviceAlarmsViewController: UITableViewController {
                 destination.alarm = self.selectedAlarm
             }
         }
+    }
+}
+
+extension DeviceAlarmsViewController {
+    /// alculates the cells of the table view that need to reload when a new page is received
+    fileprivate func visibleIndexPathsToReload(intersecting indexPaths: [IndexPath]) -> [IndexPath] {
+        let indexPathsForVisibleRows = tableView.indexPathsForVisibleRows ?? []
+        let indexPathsIntersection = Set(indexPathsForVisibleRows).intersection(indexPaths)
+        return Array(indexPathsIntersection)
     }
 }

@@ -25,8 +25,10 @@ extension C8yAlarm.C8yStatus {
         switch self {
         case .acknowledged:
             return %"alarm_status_acknowledged"
+
         case .cleared:
             return %"alarm_status_cleared"
+
         default:
             return %"alarm_status_active"
         }
@@ -36,8 +38,10 @@ extension C8yAlarm.C8yStatus {
         switch self {
         case .acknowledged:
             return %"alarm_status_acknowledged_verb"
+
         case .cleared:
             return %"alarm_status_cleared_verb"
+
         default:
             return %"alarm_status_active_verb"
         }
