@@ -59,13 +59,16 @@ class NewCommentViewController: UIViewController, UITextViewDelegate {
         let alarmsApi = Cumulocity.Core.shared.alarms.alarmsApi
         alarmsApi.updateAlarm(body: alarm, id: id)
             .receive(on: DispatchQueue.main)
-            .sink(receiveCompletion: {_ in
-                self.shareButton.configuration?.showsActivityIndicator = false
-            }, receiveValue: {value in
-                self.alarm = value
-                self.delegate?.receivedUpdatedAlarm(alarm: self.alarm)
-                self.navigationController?.popViewController(animated: true)
-            })
+            .sink(
+                receiveCompletion: { _ in
+                    self.shareButton.configuration?.showsActivityIndicator = false
+                },
+                receiveValue: { value in
+                    self.alarm = value
+                    self.delegate?.receivedUpdatedAlarm(alarm: self.alarm)
+                    self.navigationController?.popViewController(animated: true)
+                }
+            )
             .store(in: &self.cancellableSet)
     }
 }

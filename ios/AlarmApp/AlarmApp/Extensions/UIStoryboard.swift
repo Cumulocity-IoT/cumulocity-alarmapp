@@ -41,11 +41,13 @@ extension UIStoryboard {
     }
 
     static func createCommentListViewController() -> CommentListViewController? {
-        instantiateViewController(withIdentifier: String(describing: CommentListViewController.self)) as? CommentListViewController
+        instantiateViewController(withIdentifier: String(describing: CommentListViewController.self))
+            as? CommentListViewController
     }
 
     static func createDeviceDetailsViewController() -> DeviceDetailsViewController? {
-        instantiateViewController(withIdentifier: String(describing: DeviceDetailsViewController.self)) as? DeviceDetailsViewController
+        instantiateViewController(withIdentifier: String(describing: DeviceDetailsViewController.self))
+            as? DeviceDetailsViewController
     }
 
     static func instantiateViewController(withIdentifier identifier: String) -> UIViewController? {

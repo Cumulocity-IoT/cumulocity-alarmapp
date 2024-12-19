@@ -14,9 +14,9 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-import UIKit
-import CumulocityCoreLibrary
 import Combine
+import CumulocityCoreLibrary
+import UIKit
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     private var cancellableSet = Set<AnyCancellable>()
@@ -53,7 +53,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     private func handleDeepLink(openingUrl url: URL) {
-        guard let components = NSURLComponents(url: url, resolvingAgainstBaseURL: true), let params = components.queryItems else {
+        guard let components = NSURLComponents(url: url, resolvingAgainstBaseURL: true),
+            let params = components.queryItems
+        else {
             return
         }
         if let externalId = params.first(where: { $0.name == "externalId" })?.value {
@@ -95,21 +97,21 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         if let controller = self.window?.rootViewController as? UINavigationController {
             let managedObjectsApi = Cumulocity.Core.shared.inventory.managedObjectsApi
             managedObjectsApi.getManagedObject(id: deviceId)
-            .receive(on: DispatchQueue.main)
-            .sink(
-                receiveCompletion: { _ in
-                },
-                receiveValue: { value in
-                    if let location = UIStoryboard.createDeviceDetailsViewController() {
-                        PushNotificationCenter.shared().receivedDeviceId = nil
-                        var source = C8yAlarm.C8ySource()
-                        source.id = value.id
-                        location.source = source
-                        controller.pushViewController(location, animated: false)
+                .receive(on: DispatchQueue.main)
+                .sink(
+                    receiveCompletion: { _ in
+                    },
+                    receiveValue: { value in
+                        if let location = UIStoryboard.createDeviceDetailsViewController() {
+                            PushNotificationCenter.shared().receivedDeviceId = nil
+                            var source = C8yAlarm.C8ySource()
+                            source.id = value.id
+                            location.source = source
+                            controller.pushViewController(location, animated: false)
+                        }
                     }
-                }
-            )
-            .store(in: &self.cancellableSet)
+                )
+                .store(in: &self.cancellableSet)
         } else {
             // We're not logged in!
             PushNotificationCenter.shared().receivedDeviceId = deviceId

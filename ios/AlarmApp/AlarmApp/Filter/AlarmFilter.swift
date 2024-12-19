@@ -48,7 +48,7 @@ public class AlarmFilter {
     }
 
     /// Removes the *severity* if it's selected, otherwise it will be added.
-    /// 
+    ///
     /// We'll ensure that there is at least one element in the selection. Having *0* elements is equal to a full selection and thus all elements will be added.
     func invert(severity: C8yAlarm.C8ySeverity) {
         if self.isSelected(severity: severity) {
@@ -80,15 +80,12 @@ public class AlarmFilter {
     }
 
     func filtersAllSeverity() -> Bool {
-        isSelected(severity: C8yAlarm.C8ySeverity.critical) &&
-        isSelected(severity: C8yAlarm.C8ySeverity.major) &&
-        isSelected(severity: C8yAlarm.C8ySeverity.minor) &&
-        isSelected(severity: C8yAlarm.C8ySeverity.warning)
+        isSelected(severity: C8yAlarm.C8ySeverity.critical) && isSelected(severity: C8yAlarm.C8ySeverity.major)
+            && isSelected(severity: C8yAlarm.C8ySeverity.minor) && isSelected(severity: C8yAlarm.C8ySeverity.warning)
     }
 
     func filtersAllStatus() -> Bool {
-        isSelected(status: C8yAlarm.C8yStatus.active) &&
-        isSelected(status: C8yAlarm.C8yStatus.acknowledged) &&
-        isSelected(status: C8yAlarm.C8yStatus.cleared)
+        isSelected(status: C8yAlarm.C8yStatus.active) && isSelected(status: C8yAlarm.C8yStatus.acknowledged)
+            && isSelected(status: C8yAlarm.C8yStatus.cleared)
     }
 }

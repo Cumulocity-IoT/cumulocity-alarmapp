@@ -24,9 +24,12 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     @IBOutlet var tenantTextfield: UITextField!
     @IBOutlet var usernameTextfield: UITextField!
     @IBOutlet var passwordTextfield: UITextField!
+    @IBOutlet var otpTextfield: UITextField!
+
     var tenant: String?
     var userName: String?
     var password: String?
+    var otp: String?
     var showPasswordButton: UIButton?
 
     override func viewWillAppear(_ animated: Bool) {
@@ -37,13 +40,16 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         self.userName = defaultCredentials.userName
         self.tenantTextfield.text = self.tenant
         self.usernameTextfield.text = self.userName
+        self.passwordTextfield.text = self.password
         // configure passwort textfield to provide capability to show password
         self.showPasswordButton = UIButton(configuration: .borderless())
         self.showPasswordButton?.configuration?.image = getPasswordDecoration()
-        self.showPasswordButton?.configuration?.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(scale: .medium)
+        self.showPasswordButton?.configuration?.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(
+            scale: .medium
+        )
         self.showPasswordButton?.tintColor = .primary
         self.showPasswordButton?.addTarget(self, action: #selector(didPressedPasswordButton), for: .touchUpInside)
-        self.passwordTextfield.rightViewMode = .whileEditing // required otherwise clear button is shown
+        self.passwordTextfield.rightViewMode = .whileEditing  // required otherwise clear button is shown
         self.passwordTextfield.rightView = showPasswordButton
     }
 
@@ -54,7 +60,9 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     }
 
     private func getPasswordDecoration() -> UIImage? {
-        let image = self.passwordTextfield.isSecureTextEntry ? UIImage(systemName: "eye.fill") : UIImage(systemName: "eye.slash.fill")
+        let image =
+            self.passwordTextfield.isSecureTextEntry
+            ? UIImage(systemName: "eye.fill") : UIImage(systemName: "eye.slash.fill")
         return image
     }
 
@@ -72,42 +80,61 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         self.password = sender.text
     }
 
+    @IBAction func onOtpEntered(_ sender: UITextField) {
+        self.otp = sender.text
+    }
+
     @IBAction func onLoginButttonTapped(_ sender: UIButton) {
         guard let user = self.userName, let password = self.password, let tenant = self.tenant else {
             return
         }
 
-        let credentials = Credentials(forUser: user, password: password, tenant: tenant)
-        CumulocityApi.shared().initRequestBuilder(forCredentials: credentials)
-        sender.configuration?.showsActivityIndicator = true
+        Task { @MainActor in
+            sender.configuration?.showsActivityIndicator = true
+            let credentials = Credentials(
+                forUser: user,
+                password: password,
+                tenant: tenant
+            )
+            credentials.otp = self.otp
 
-        let usersApi = Cumulocity.Core.shared.users.currentUserApi
-        usersApi.getCurrentUser()
-            .receive(on: DispatchQueue.main)
-            .sink(
-                receiveCompletion: { completion in
-                    sender.configuration?.showsActivityIndicator = false
-                    if (try? completion.error()) != nil {
-                        credentials.remove()
-                        self.presentAuthenticationError()
-                    }
-                },
-                receiveValue: { value in
-                    guard let userId = value.id else {
-                        return
-                    }
-                    CumulocityApi.shared().userId = userId
-                    credentials.persist(for: userId)
+            do {
+                guard let tenantUrl = URL(string: tenant) else {
+                    // todo: present error for invalid url
+                    return
+                }
+                let loginOptions = try await Cumulocity.getLoginOptions(url: tenantUrl)
+                if let oauthOption = loginOptions?["OAUTH2_INTERNAL"] {
+                    try? await CumulocityApi.shared().login(credentials: credentials, loginOption: oauthOption)
+                } else if let basicAuthOption = loginOptions?["BASIC"] {
+                    CumulocityApi.shared().initRequestBuilder(forCredentials: credentials, loginOption: basicAuthOption)
+                } else {
+                    // todo: present error for unsupported auth type
+                    return
+                }
 
-                    if let window = UIApplication.shared.keyWindow {
-                        let onboardingViewController = UIStoryboard.createRootViewController()
-                        window.rootViewController?.dismiss(animated: true) {
-                            window.rootViewController = onboardingViewController
-                        }
+                let usersApi = Cumulocity.Core.shared.users.currentUserApi
+                let value = try await usersApi.getCurrentUser().awaitValue()
+                sender.configuration?.showsActivityIndicator = false
+                guard let userId = value.id else {
+                    return
+                }
+                CumulocityApi.shared().userId = userId
+                credentials.persist(for: userId)
+
+                if let window = UIApplication.shared.keyWindow {
+                    let onboardingViewController = UIStoryboard.createRootViewController()
+                    window.rootViewController?.dismiss(animated: true) {
+                        window.rootViewController = onboardingViewController
                     }
                 }
-            )
-            .store(in: &self.cancellableSet)
+            } catch {
+                sender.configuration?.showsActivityIndicator = false
+                print(error.localizedDescription)
+                credentials.remove()
+                self.presentAuthenticationError()
+            }
+        }
     }
 
     private func presentAuthenticationError() {

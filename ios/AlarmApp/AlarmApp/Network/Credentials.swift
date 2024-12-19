@@ -31,13 +31,28 @@ class Credentials {
     var password: String
     var tenant: String
 
-    init(forUser userName: String, password: String, tenant: String) {
+    var authorization: HTTPCookie?
+    var xsrfToken: HTTPCookie?
+
+    var otp: String?
+
+    init(
+        forUser userName: String,
+        userId: String = "",
+        password: String,
+        authorization: HTTPCookie,
+        xsrfToken: HTTPCookie,
+        tenant: String
+    ) {
         self.userName = userName
+        self.userId = userId
+        self.authorization = authorization
+        self.xsrfToken = xsrfToken
         self.password = password
         self.tenant = tenant
     }
 
-    private init(forUser userName: String, userId: String, password: String, tenant: String) {
+    init(forUser userName: String, userId: String = "", password: String, tenant: String) {
         self.userName = userName
         self.userId = userId
         self.password = password
@@ -54,16 +69,63 @@ class Credentials {
         let userName = UserDefaults.standard.string(forKey: Keys.userName.rawValue)
         let userId = UserDefaults.standard.string(forKey: Keys.userId.rawValue)
         let tenant = UserDefaults.standard.string(forKey: Keys.tenant.rawValue)
+
         guard let u = userName, let t = tenant, let id = userId else {
             return nil
         }
-        guard let properties = Strongbox().unarchive(objectForKey: Self.serviceName) as? [String: String] else {
+
+        guard let properties = Strongbox().unarchive(objectForKey: Self.serviceName) as? [String: Any] else {
             return nil
         }
-        if let password = properties["password"] {
+
+        let authorization = properties["authorization"] as? [String: Any]
+        let xsrfToken = properties["xsrfToken"] as? [String: Any]
+        let password = properties["password"] as? String
+        // assume there is always a password as it is currently needed for login
+        // even if we have authorization token, password might be user to relogin
+        guard let password else { return nil }
+
+        if let authorization, let xsrfToken {
+            guard !self.isCookieExpired(xsrfToken), !self.isCookieExpired(authorization)
+            else {
+                return nil
+            }
+            guard let a = Credentials.toHTTPCookie(authorization) else { return nil }
+            guard let x = Credentials.toHTTPCookie(xsrfToken) else { return nil }
+            return Credentials(forUser: u, userId: id, password: password, authorization: a, xsrfToken: x, tenant: t)
+        } else {
             return Credentials(forUser: u, userId: id, password: password, tenant: t)
         }
-        return nil
+    }
+
+    static func toHTTPCookie(_ properties: [String: Any]) -> HTTPCookie? {
+        var cookieProperties = [HTTPCookiePropertyKey: Any]()
+        for (key, value) in properties {
+            let propertyKey = HTTPCookiePropertyKey(rawValue: key)
+            cookieProperties[propertyKey] = value
+        }
+        return HTTPCookie(properties: cookieProperties)
+    }
+
+    static func isCookieExpired(_ fromProperties: [String: Any]) -> Bool {
+        if let expiresDate = fromProperties["Expires"] as? Date {
+            return expiresDate < Date()
+        }
+
+        guard let expiresString = fromProperties["Expires"] as? String else {
+            return false
+        }
+
+        // todo: test if this works in all cases or without the DateFormatter()
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss zzz"
+        dateFormatter.timeZone = TimeZone(abbreviation: "UTC")
+
+        guard let expiresDate = dateFormatter.date(from: expiresString) else {
+            return false
+        }
+
+        return expiresDate < Date()
     }
 
     func persist(for userId: String) {
@@ -72,8 +134,11 @@ class Credentials {
         UserDefaults.standard.set(self.userId, forKey: Keys.userId.rawValue)
         UserDefaults.standard.set(self.tenant, forKey: Keys.tenant.rawValue)
         // userName, password are protected by isValid()
-        let properties = [
+
+        let properties: [String: Any] = [
             "password": password,
+            "authorization": authorization?.properties ?? "",
+            "xsrfToken": xsrfToken?.properties ?? "",
         ]
         _ = Strongbox().archive(properties, key: Self.serviceName)
     }

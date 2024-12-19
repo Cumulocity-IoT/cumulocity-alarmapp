@@ -20,6 +20,7 @@
 "login_tenant_name_placeholder" = "Tenant Name";
 "login_user_name_placeholder" = "User Name";
 "login_password_placeholder" = "Password";
+"login_otp_placeholder" = "One Time Password";
 "login_button_text" = "Login";
 
 "dashboard_title" = "Dashboard";

@@ -33,11 +33,20 @@ class AlarmFilterTableHeader: UITableViewHeaderFooterView {
         didSet {
             self.collectionView.dataSource = self
             FilterChip.register(for: self.collectionView)
-            let layout = UICollectionViewCompositionalLayout { (_: Int, _: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection? in
+            let layout = UICollectionViewCompositionalLayout {
+                (_: Int, _: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection? in
                 let itemSize = NSCollectionLayoutSize(widthDimension: .estimated(1), heightDimension: .estimated(1))
                 let item = NSCollectionLayoutItem(layoutSize: itemSize)
-                item.edgeSpacing = NSCollectionLayoutEdgeSpacing(leading: .fixed(8), top: .fixed(8), trailing: nil, bottom: nil)
-                let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1), heightDimension: .estimated(1))
+                item.edgeSpacing = NSCollectionLayoutEdgeSpacing(
+                    leading: .fixed(8),
+                    top: .fixed(8),
+                    trailing: nil,
+                    bottom: nil
+                )
+                let groupSize = NSCollectionLayoutSize(
+                    widthDimension: .fractionalWidth(1),
+                    heightDimension: .estimated(1)
+                )
                 let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
                 let section = NSCollectionLayoutSection(group: group)
                 section.contentInsets = .init(top: 8, leading: 8, bottom: 16, trailing: 16)
@@ -101,8 +110,11 @@ extension AlarmFilterTableHeader: UICollectionViewDataSource {
         filterModel.count
     }
 
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        if let chip = collectionView.dequeueReusableCell(withReuseIdentifier: FilterChip.identifier, for: indexPath) as? FilterChip {
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell
+    {
+        if let chip = collectionView.dequeueReusableCell(withReuseIdentifier: FilterChip.identifier, for: indexPath)
+            as? FilterChip
+        {
             chip.label.setTitle(filterModel[indexPath.item].title, for: [])
             return chip
         }

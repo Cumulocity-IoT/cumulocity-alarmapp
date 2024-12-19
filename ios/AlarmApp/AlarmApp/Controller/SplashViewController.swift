@@ -22,7 +22,7 @@ class SplashViewController: UIViewController {
 
         let detailViewController = UIStoryboard.createLoginViewController()
         if let controller = detailViewController {
-            presentAs(bottomSheet: controller, detents: [.medium(), .large()], isModal: true)
+            presentAs(bottomSheet: controller, detents: [.large(), .large()], isModal: true)
         }
     }
 

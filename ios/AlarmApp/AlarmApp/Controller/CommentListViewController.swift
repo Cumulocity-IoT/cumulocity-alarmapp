@@ -26,7 +26,9 @@ class CommentListViewController: UITableViewController {
         let emptyItem = EmptyCommentsItem()
         tableView.backgroundView = emptyItem
         tableView.backgroundView?.isHidden = true
-        self.data = data.sorted { $0.time?.localizedCaseInsensitiveCompare($1.time ?? "") == ComparisonResult.orderedDescending }
+        self.data = data.sorted {
+            $0.time?.localizedCaseInsensitiveCompare($1.time ?? "") == ComparisonResult.orderedDescending
+        }
         self.tableView.reloadData()
     }
 
