@@ -83,6 +83,7 @@
 		30FD5B0F27F1ADD300F61F3F /* Credentials.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30FD5B0E27F1ADD300F61F3F /* Credentials.swift */; };
 		30FD5B1127F1C1C500F61F3F /* PushNotificationCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30FD5B1027F1C1C500F61F3F /* PushNotificationCenter.swift */; };
 		30FD5B1427F1CABA00F61F3F /* IQKeyboardManagerSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 30FD5B1327F1CABA00F61F3F /* IQKeyboardManagerSwift */; };
+		F15B3A242D15948100A47B59 /* PaginatedViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F113B91C2D14775600420983 /* PaginatedViewModel.swift */; };
 		F1D0DC362CFDFB5F008EF7EC /* Cumulocity.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1D0DC352CFDFB5F008EF7EC /* Cumulocity.swift */; };
 		F1D0DC382CFF96DD008EF7EC /* AuthAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1D0DC372CFF96D6008EF7EC /* AuthAdapter.swift */; };
 /* End PBXBuildFile section */
@@ -163,6 +164,7 @@
 		30FBB9C927CD417F008302D0 /* DetailsItem.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = DetailsItem.xib; sourceTree = "<group>"; };
 		30FD5B0E27F1ADD300F61F3F /* Credentials.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Credentials.swift; sourceTree = "<group>"; };
 		30FD5B1027F1C1C500F61F3F /* PushNotificationCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushNotificationCenter.swift; sourceTree = "<group>"; };
+		F113B91C2D14775600420983 /* PaginatedViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaginatedViewModel.swift; sourceTree = "<group>"; };
 		F1C9181E294300F70020DFCE /* .swiftlint.yml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.yaml; path = .swiftlint.yml; sourceTree = "<group>"; };
 		F1C918202943010A0020DFCE /* .swift-format */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ".swift-format"; sourceTree = "<group>"; };
 		F1D0DC352CFDFB5F008EF7EC /* Cumulocity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cumulocity.swift; sourceTree = "<group>"; };
@@ -220,6 +222,7 @@
 				30E1D0F427E8ECF600FCB4DA /* Fragments */,
 				30E1D0CE27E3E29C00FCB4DA /* PushGateway */,
 				30FBB9C427CD4115008302D0 /* Views */,
+				F113B91D2D14775600420983 /* Pagination */,
 				3056B76927CE603300ED443B /* Network */,
 				3056B77A27CE896F00ED443B /* Material */,
 				309A860B27DF659F00F69ED0 /* MaterialUI */,
@@ -380,6 +383,14 @@
 				30F6C36227D6B89300884CE8 /* SeparatorItem.xib */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		F113B91D2D14775600420983 /* Pagination */ = {
+			isa = PBXGroup;
+			children = (
+				F113B91C2D14775600420983 /* PaginatedViewModel.swift */,
+			);
+			path = Pagination;
 			sourceTree = "<group>";
 		};
 		F1C918242943275B0020DFCE /* External */ = {
@@ -557,6 +568,7 @@
 				30E1D0D627E3E2BB00FCB4DA /* RegistrationsApi.swift in Sources */,
 				F1D0DC382CFF96DD008EF7EC /* AuthAdapter.swift in Sources */,
 				30C43B0127D12A5B009EA909 /* AlarmListViewController.swift in Sources */,
+				F15B3A242D15948100A47B59 /* PaginatedViewModel.swift in Sources */,
 				3008B03A295F176200A05731 /* UITableViewHeaderFooterView.swift in Sources */,
 				30C660542886A62600A7AA39 /* SubscribedAlarmFilter.swift in Sources */,
 				30C43AFC27D0C9D8009EA909 /* AlarmCountItem.swift in Sources */,
@@ -797,7 +809,7 @@
 		};
 		30FBB9A227CCEEEC008302D0 /* XCRemoteSwiftPackageReference "cumulocity-clients-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/SoftwareAG/cumulocity-clients-swift";
+			repositoryURL = "https://github.com/Cumulocity-IoT/cumulocity-clients-swift";
 			requirement = {
 				branch = main;
 				kind = branch;

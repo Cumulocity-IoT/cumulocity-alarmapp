@@ -75,7 +75,7 @@ class DashboardViewController: UIViewController, AlarmListReloadDelegate, EmptyA
         let textfields = [self.criticalCountItem, self.majorCountItem, self.minorCountItem, self.warningCountItem]
         arguments.enumerated().publisher
             .flatMap { index, arg in
-                return alarmsApi.getAlarms(
+                alarmsApi.getAlarms(
                     pageSize: 1,
                     severity: [arg.rawValue],
                     status: [C8yAlarm.C8yStatus.active.rawValue],
@@ -94,7 +94,7 @@ class DashboardViewController: UIViewController, AlarmListReloadDelegate, EmptyA
     }
 
     ///  update tag list for receiving push notifications
-    func fetchAlarms() {
+    func reload() {
         SubscribedAlarmFilter.shared.resolvedDeviceId = nil
         if let deviceName = SubscribedAlarmFilter.shared.deviceName {
             let managedObjectsApi = Cumulocity.Core.shared.inventory.managedObjectsApi
