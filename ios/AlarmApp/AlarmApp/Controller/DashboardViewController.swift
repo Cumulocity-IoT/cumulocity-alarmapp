@@ -55,9 +55,13 @@ class DashboardViewController: UIViewController, AlarmListReloadDelegate, EmptyA
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         // forward to whatever value has been passed using URL types
-        if let deviceId = PushNotificationCenter.shared().receivedDeviceId, let sceneDelegate = self.view.window?.windowScene?.delegate as? SceneDelegate {
+        if let deviceId = PushNotificationCenter.shared().receivedDeviceId,
+            let sceneDelegate = self.view.window?.windowScene?.delegate as? SceneDelegate
+        {
             sceneDelegate.resolveDeepLink(withDevicelId: deviceId)
-        } else if let externalId = PushNotificationCenter.shared().receivedExternalId, let sceneDelegate = self.view.window?.windowScene?.delegate as? SceneDelegate {
+        } else if let externalId = PushNotificationCenter.shared().receivedExternalId,
+            let sceneDelegate = self.view.window?.windowScene?.delegate as? SceneDelegate
+        {
             sceneDelegate.resolveDeepLink(withExternalId: externalId)
         }
     }
@@ -186,7 +190,9 @@ class DashboardViewController: UIViewController, AlarmListReloadDelegate, EmptyA
 
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == UIStoryboardSegue.toAlarmsView {
-            if let destination = segue.destination as? AlarmListViewController, let severity = self.filteredAlarmSeverity {
+            if let destination = segue.destination as? AlarmListViewController,
+                let severity = self.filteredAlarmSeverity
+            {
                 destination.filter.severity = [severity]
             }
         } else if segue.identifier == UIStoryboardSegue.toAlarmDetails {
